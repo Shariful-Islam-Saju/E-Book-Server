@@ -1,10 +1,10 @@
 {
-  "name": "prototype-server",
+  "name": "e-book-sever",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node -r tsconfig-paths/register src/server.ts"
+    "dev": "nodemon --watch src --ext ts,js,json --exec ts-node -r tsconfig-paths/register src/server.ts"
   },
   "keywords": [],
   "author": "Shariful Islam",

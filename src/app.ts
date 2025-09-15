@@ -1,10 +1,11 @@
 // app.ts
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import cors, { CorsOptions } from "cors";
 import cookieParser from "cookie-parser";
 import router from "@app/routes";
 import notFound from "@app/middlewares/notFound";
 import globalErrorHandler from "@app/middlewares/globalErrorHandler";
+import logger from "@app/shared/logger"; // <-- Import your pino logger
 
 const app: Express = express();
 
@@ -24,6 +25,7 @@ const corsOptions: CorsOptions = {
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      logger.warn(`Blocked CORS request from: ${origin}`); // Log blocked origins
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -37,10 +39,17 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request logger middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info({ method: req.method, url: req.url }, "Incoming request");
+  next();
+});
+
 // Health check route
 app.get("/api/v1", (req: Request, res: Response) => {
+  logger.info("Health check route called");
   res.send({
-    message: "Prototype App is running...",
+    message: "EBook App is running...",
   });
 });
 
