@@ -1,5 +1,6 @@
 // app/routes/index.ts
 import { authRouter } from "@app/modules/auth/auth.route";
+import { fileRouter } from "@app/modules/file/file.route";
 import { Router } from "express";
 
 const router = Router();
@@ -13,6 +14,10 @@ const moduleRoutes: ModuleRoute[] = [
   {
     path: "/auth",
     route: authRouter,
+  },
+  {
+    path: "/file",
+    route: fileRouter,
   },
 ];
 

@@ -42,7 +42,7 @@ model Review {
   reviewBy     String
   mobile       String?
   rating       Int
-  desscription String
+  description  String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

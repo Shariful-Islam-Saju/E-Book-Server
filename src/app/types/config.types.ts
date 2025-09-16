@@ -7,11 +7,20 @@ export interface JwtConfig {
   refresh_token_expires_in: string;
 }
 
+
+export interface AwsConfig {
+  aws_access_key: string;
+  aws_secret_key: string;
+  aws_region: string;
+  aws_bucket: string;
+}
+
 export interface Config {
   env: string;
   port: string;
   salt_rounds: string;
   jwt: JwtConfig;
+  aws: AwsConfig;
 }
 
 
