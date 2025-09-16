@@ -17,7 +17,7 @@ const uploadFile = catchAsync(async (req: Request, res: Response) => {
 
 // ✅ Download
 const downloadFile = catchAsync(async (req: Request, res: Response) => {
-  const result = await fileService.downloadFile(req.params.filename);
+  const result = await fileService.downloadFile(req.params.fileId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

@@ -12,8 +12,8 @@ const uploadFile = async (req: Request) => {
   }
 
   // Upload to AWS S3
-  const uploadToAws = await fileUploader.uploadToS3(file);
-
+  // const uploadToAws = await fileUploader.uploadToS3(file);
+  const uploadToAws = 'sample-url'; // --- IGNORE ---
   // Save metadata in DB
   const ebook = await prisma.eBook.create({
     data: {
@@ -26,9 +26,9 @@ const uploadFile = async (req: Request) => {
 };
 
 // ---------------- DOWNLOAD FILE ----------------
-const downloadFile = async (filename: string) => {
-  const ebook = await prisma.eBook.findFirst({
-    where: { title: filename },
+const downloadFile = async (id: string) => {
+  const ebook = await prisma.eBook.findUnique({
+    where: { id },
   });
 
   if (!ebook) {
@@ -37,7 +37,7 @@ const downloadFile = async (filename: string) => {
 
   // If you want direct download, generate signed URL
   const signedUrl = await fileUploader.getSignedUrl(ebook.url);
-
+  console.log(signedUrl);
   return {
     ...ebook,
     downloadUrl: signedUrl,

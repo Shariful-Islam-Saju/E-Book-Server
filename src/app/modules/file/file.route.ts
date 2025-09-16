@@ -12,7 +12,7 @@ router.post(
 );
 
 // Download file
-router.get("/download/:filename", fileController.downloadFile);
+router.get("/download/:fileId", fileController.downloadFile);
 
 // Get all files
 router.get("/", fileController.getAllFiles);
