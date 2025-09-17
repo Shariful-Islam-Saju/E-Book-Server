@@ -12,8 +12,8 @@ const uploadFile = async (req: Request) => {
   }
 
   // Upload to AWS S3
-  // const uploadToAws = await fileUploader.uploadToS3(file);
-  const uploadToAws = 'sample-url'; // --- IGNORE ---
+  const uploadToAws = await fileUploader.uploadToS3(file);
+  // const uploadToAws = 'sample-url'; // --- IGNORE ---
   // Save metadata in DB
   const ebook = await prisma.eBook.create({
     data: {

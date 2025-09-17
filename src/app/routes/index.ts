@@ -1,7 +1,9 @@
 // app/routes/index.ts
+import { Router } from "express";
 import { authRouter } from "@app/modules/auth/auth.route";
 import { fileRouter } from "@app/modules/file/file.route";
-import { Router } from "express";
+import { leadRouter } from "@app/modules/lead/lead.route";
+import { reviewRouter } from "@app/modules/review/review.route";
 
 const router = Router();
 
@@ -19,6 +21,14 @@ const moduleRoutes: ModuleRoute[] = [
     path: "/file",
     route: fileRouter,
   },
+  {
+    path: "/lead",
+    route: leadRouter,
+  },
+  {
+    path: "/review",
+    route: reviewRouter,
+  }
 ];
 
 // Attach all routes to main router

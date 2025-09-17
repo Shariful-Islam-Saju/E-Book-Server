@@ -60,7 +60,7 @@ const deleteFile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export default {
+export const fileController = {
   uploadFile,
   downloadFile,
   getAllFiles,
