@@ -4,7 +4,7 @@ import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
 
 const createLead = async (req: Request) => {
-  const { name, mobile, address } = req.body;
+  const { name, mobile, address, ebookId } = req.body;
 
   if (!mobile) {
     throw new AppError(httpStatus.BAD_REQUEST, "Mobile is required");
@@ -15,11 +15,13 @@ const createLead = async (req: Request) => {
     update: {
       name: name ?? undefined, // update if provided
       address: address ?? undefined,
+      ebookId,
     },
     create: {
       name,
       mobile,
       address,
+      ebookId,
     },
   });
 
