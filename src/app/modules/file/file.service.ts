@@ -3,6 +3,7 @@ import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
 import { fileUploader } from "@app/helpers/fileUploader";
+import { get } from "http";
 
 // ---------------- UPLOAD FILE ----------------
 const uploadFile = async (req: Request) => {
@@ -53,9 +54,28 @@ const getAllFiles = async () => {
 };
 
 // ---------------- GET SINGLE FILE ----------------
-const getSingleFile = async (id: string) => {
-  const ebook = await prisma.eBook.findFirst({
+const getSingleFile = async (id?: string) => {
+  if (!id) {
+    throw new AppError(httpStatus.BAD_REQUEST, "File ID is required");
+  }
+
+  const ebook = await prisma.eBook.findUnique({
     where: { id },
+    select: {
+      id: true,
+      title: true,
+      url: true,
+      reviews: {
+        select: {
+          id: true,
+          rating: true,
+          description: true,
+          title: true,
+          reviewBy: true,
+          mobile: true,
+        },
+      },
+    },
   });
 
   if (!ebook) {
@@ -65,9 +85,40 @@ const getSingleFile = async (id: string) => {
   return ebook;
 };
 
+// ---------------- GET FILE BY NAME ----------------
+const getFileByName = async (title?: string) => {
+  if (!title) {
+    throw new AppError(httpStatus.BAD_REQUEST, "File title is required");
+  }
+
+  const ebook = await prisma.eBook.findFirst({
+    where: { title },
+    select: {
+      id: true,
+      title: true,
+      url: true,
+      reviews: {
+        select: {
+          id: true,
+          rating: true,
+          description: true,
+          title: true,
+          reviewBy: true,
+          mobile: true,
+        },
+      },
+    },
+  });
+
+  if (!ebook) {
+    throw new AppError(httpStatus.NOT_FOUND, "File not found");
+  }
+
+  return ebook;
+};
 // ---------------- DELETE FILE ----------------
 const deleteFile = async (id: string) => {
-  const ebook = await prisma.eBook.findFirst({
+  const ebook = await prisma.eBook.findUnique({
     where: { id },
   });
 
@@ -92,4 +143,5 @@ export const fileService = {
   getAllFiles,
   getSingleFile,
   deleteFile,
+  getFileByName,
 };

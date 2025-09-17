@@ -49,6 +49,18 @@ const getSingleFile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+// ✅ Get  file info by name
+const getFileByName = catchAsync(async (req: Request, res: Response) => {
+  const result = await fileService.getFileByName(req.params.fileName);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "File retrieved successfully!",
+    data: result,
+  });
+});
+
 // ✅ Delete file
 const deleteFile = catchAsync(async (req: Request, res: Response) => {
   const result = await fileService.deleteFile(req.params.fileId);
@@ -66,4 +78,5 @@ export const fileController = {
   getAllFiles,
   getSingleFile,
   deleteFile,
+  getFileByName,
 };

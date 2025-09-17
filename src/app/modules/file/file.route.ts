@@ -14,13 +14,15 @@ router.post(
 );
 
 // Download file
-router.get("/download/:fileId", fileController.downloadFile);
+router.get("/download/:fileId",auth(), fileController.downloadFile);
 
 // Get all files
-router.get("/", auth(), fileController.getAllFiles);
+router.get("/", fileController.getAllFiles);
 
 // Get single file info
-router.get("/:fileId", fileController.getSingleFile);
+router.get("/file-id/:fileId", fileController.getSingleFile);
+
+router.get("/file-name/:title", fileController.getFileByName);
 
 // Delete file
 router.delete("/:fileId",auth(), fileController.deleteFile);

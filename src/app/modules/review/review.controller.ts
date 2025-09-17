@@ -29,6 +29,19 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getSingleProductReviews = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await reviewService.getSingleProductReviews(req.params.ebookId);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Reviews retrieved successfully!",
+      data: result,
+    });
+  }
+);
+
 // ✅ Delete a review by ID
 const deleteReview = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -45,4 +58,5 @@ export const reviewController = {
   createReview,
   getAllReviews,
   deleteReview,
+  getSingleProductReviews,
 };

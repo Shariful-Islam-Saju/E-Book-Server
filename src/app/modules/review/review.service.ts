@@ -1,3 +1,4 @@
+import { get } from 'http';
 import { Request } from "express";
 import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
@@ -48,6 +49,25 @@ const getAllReviews = async (ebookId?: string) => {
   });
 };
 
+const getSingleProductReviews = async (ebookId: string) => {
+  if (!ebookId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "ebookId is required");
+  }
+  const reviews = await prisma.review.findMany({
+    where: { ebookId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      rating: true,
+      description: true,
+      reviewBy: true,
+      mobile: true,
+    },
+  });
+
+  return reviews;
+}
 // Delete a review
 const deleteReview = async (id: string) => {
   const existing = await prisma.review.findUnique({ where: { id } });
@@ -63,4 +83,5 @@ export const reviewService = {
   createReview,
   getAllReviews,
   deleteReview,
+  getSingleProductReviews,
 };
