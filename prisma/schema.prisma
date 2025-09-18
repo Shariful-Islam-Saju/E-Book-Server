@@ -35,7 +35,7 @@ model EBook {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
+  imgUrl      String?
   // Relations
   reviews Review[]
 }

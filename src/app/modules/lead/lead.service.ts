@@ -6,21 +6,31 @@ import httpStatus from "http-status";
 const createLead = async (req: Request) => {
   const { name, mobile, address, ebookId } = req.body;
 
-  if (!mobile) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Mobile is required");
+  // Mobile is required and must be 11+ chars
+  if (!mobile || mobile.trim().length < 11) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Mobile must be at least 11 digits"
+    );
   }
+
+  // Helper: must be at least 2 characters
+  const hasTwoLetters = (str?: string) => {
+    if (!str) return false;
+    return str.trim().length >= 2;
+  };
 
   const newLead = await prisma.lead.upsert({
     where: { mobile },
     update: {
-      name: name ?? undefined, // update if provided
-      address: address ?? undefined,
+      name: hasTwoLetters(name) ? name.trim() : undefined,
+      address: hasTwoLetters(address) ? address.trim() : undefined,
       ebookId,
     },
     create: {
-      name,
-      mobile,
-      address,
+      name: hasTwoLetters(name) ? name.trim() : undefined,
+      address: hasTwoLetters(address) ? address.trim() : undefined,
+      mobile: mobile.trim(),
       ebookId,
     },
   });

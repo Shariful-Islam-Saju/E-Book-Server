@@ -5,26 +5,45 @@ import httpStatus from "http-status";
 import { fileUploader } from "@app/helpers/fileUploader";
 import { get } from "http";
 
-// ---------------- UPLOAD FILE ----------------
 const uploadFile = async (req: Request) => {
-  const file = req.file;
-  if (!file) {
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[];
+  };
+
+  console.log("Uploaded files:", files);
+
+  if (!files || (!files.pdf?.length && !files.img?.length)) {
     throw new AppError(httpStatus.BAD_REQUEST, "No file uploaded");
   }
 
+  const pdfFile = files.pdf ? files.pdf[0] : null;
+  const imgFile = files.img ? files.img[0] : null;
+
+  if (!pdfFile) {
+    throw new AppError(httpStatus.BAD_REQUEST, "PDF file is required");
+  }
+
+  if (!imgFile) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Image file is required");
+  }
+
   // Upload to AWS S3
-  const uploadToAws = await fileUploader.uploadToS3(file);
-  // const uploadToAws = 'sample-url'; // --- IGNORE ---
+  const url = await fileUploader.uploadToS3(pdfFile);
+  const imgUrl = await fileUploader.uploadToS3(imgFile);
+
   // Save metadata in DB
   const ebook = await prisma.eBook.create({
     data: {
-      title: file.originalname,
-      url: uploadToAws,
+      title: pdfFile.originalname,
+      url,
+      imgUrl,
     },
   });
 
   return ebook;
 };
+
+export { uploadFile };
 
 // ---------------- DOWNLOAD FILE ----------------
 const downloadFile = async (id: string) => {
@@ -65,6 +84,8 @@ const getSingleFile = async (id?: string) => {
       id: true,
       title: true,
       url: true,
+      imgUrl: true,
+      description: true,
       reviews: {
         select: {
           id: true,
@@ -116,7 +137,6 @@ const getFileByName = async (title?: string) => {
 
   return ebook;
 };
-// ---------------- DELETE FILE ----------------
 const deleteFile = async (id: string) => {
   const ebook = await prisma.eBook.findUnique({
     where: { id },
@@ -126,8 +146,13 @@ const deleteFile = async (id: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "File not found");
   }
 
-  // Delete from AWS S3
-  await fileUploader.deleteFromS3(ebook.url);
+  // Delete PDF and Image from AWS S3
+  if (ebook.url) {
+    await fileUploader.deleteFromS3(ebook.url);
+  }
+  if (ebook.imgUrl) {
+    await fileUploader.deleteFromS3(ebook.imgUrl);
+  }
 
   // Delete from DB
   await prisma.eBook.delete({

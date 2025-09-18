@@ -6,12 +6,17 @@ import auth from "@app/middlewares/auth";
 const router = Router();
 
 // Upload file
+// Upload file
 router.post(
   "/upload",
-  fileUploader.upload.single("file"),
-  auth(),
+  auth(), // authentication first
+  fileUploader.upload.fields([
+    { name: "pdf", maxCount: 1 }, // max 5 pdfs
+    { name: "img", maxCount: 1 }  // max 5 images
+  ]),
   fileController.uploadFile
 );
+
 
 // Download file
 router.get("/download/:fileId",auth(), fileController.downloadFile);
