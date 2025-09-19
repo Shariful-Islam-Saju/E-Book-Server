@@ -9,8 +9,7 @@ const uploadFile = async (req: Request) => {
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
-
-  console.log("Uploaded files:", files);
+  const { title, description }  = req.body;
 
   if (!files || (!files.pdf?.length && !files.img?.length)) {
     throw new AppError(httpStatus.BAD_REQUEST, "No file uploaded");
@@ -34,7 +33,9 @@ const uploadFile = async (req: Request) => {
   // Save metadata in DB
   const ebook = await prisma.eBook.create({
     data: {
-      title: pdfFile.originalname,
+      title,
+      description,
+      fileName: pdfFile.originalname,
       url,
       imgUrl,
     },

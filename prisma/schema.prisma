@@ -36,6 +36,7 @@ model EBook {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   imgUrl      String?
+  fileName    String?
   // Relations
   reviews Review[]
 }
