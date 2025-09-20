@@ -2,10 +2,10 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors, { CorsOptions } from "cors";
 import cookieParser from "cookie-parser";
-import router from "@app/routes";
-import notFound from "@app/middlewares/notFound";
-import globalErrorHandler from "@app/middlewares/globalErrorHandler";
-import logger from "@app/shared/logger"; // <-- Import your pino logger
+import router from "./app/routes";
+import notFound from "./app/middlewares/notFound";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import logger from "./app/shared/logger"; // <-- Import your pino logger
 
 const app: Express = express();
 

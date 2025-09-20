@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
 import { CustomJwtPayload } from "@app/types";
-import { UserType } from "@prisma/client";
+import { UserType , User} from "@prisma/client";
 import config from "@app/config";
 
 const auth = (...requiredRoles: UserType[]) => {
@@ -64,7 +64,7 @@ const auth = (...requiredRoles: UserType[]) => {
       }
 
       // 7. Attach user info to req
-      req.user = user;
+      req.user  = user;
 
       next();
     } catch (error) {

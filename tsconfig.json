@@ -12,7 +12,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./src",
     "paths": {
-      "@app/*": ["app/*"]
+      "@app/*": ["app/*"],
+      "@/*": ["*"]
     }
   },
   "include": ["src"],

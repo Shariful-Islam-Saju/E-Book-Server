@@ -58,6 +58,7 @@ model Review {
 
 
 enum UserType {
+  SUPERADMIN
   ADMIN
   USER
 }

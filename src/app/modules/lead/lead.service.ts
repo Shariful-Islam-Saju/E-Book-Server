@@ -4,13 +4,28 @@ import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
 
 const createLead = async (req: Request) => {
-  const { name, mobile, address, ebookId } = req.body;
+  let { name, mobile, address, ebookId } = req.body;
 
-  // Mobile is required and must be 11+ chars
-  if (!mobile || mobile.trim().length < 11) {
+  // Normalize mobile number
+  const normalizeMobile = (number?: string) => {
+    if (!number) return null;
+    let cleaned = number.replace(/\s+/g, ""); // remove spaces
+    if (cleaned.startsWith("+880")) {
+      return "0" + cleaned.slice(4); // +8801XXXX -> 01XXXX
+    } else if (cleaned.startsWith("880")) {
+      return "0" + cleaned.slice(3); // 8801XXXX -> 01XXXX
+    } else if (cleaned.startsWith("01")) {
+      return cleaned; // already correct
+    }
+    return null; // invalid format
+  };
+
+  const normalizedMobile = normalizeMobile(mobile);
+
+  if (!normalizedMobile || normalizedMobile.length !== 11) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "Mobile must be at least 11 digits"
+      "Mobile must be a valid Bangladeshi number (11 digits, starting with 01)"
     );
   }
 
@@ -21,7 +36,7 @@ const createLead = async (req: Request) => {
   };
 
   const newLead = await prisma.lead.upsert({
-    where: { mobile },
+    where: { mobile: normalizedMobile },
     update: {
       name: hasTwoLetters(name) ? name.trim() : undefined,
       address: hasTwoLetters(address) ? address.trim() : undefined,
@@ -30,7 +45,7 @@ const createLead = async (req: Request) => {
     create: {
       name: hasTwoLetters(name) ? name.trim() : undefined,
       address: hasTwoLetters(address) ? address.trim() : undefined,
-      mobile: mobile.trim(),
+      mobile: normalizedMobile,
       ebookId,
     },
   });

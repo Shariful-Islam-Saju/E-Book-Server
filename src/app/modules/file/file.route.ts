@@ -9,7 +9,7 @@ const router = Router();
 // Upload file
 router.post(
   "/upload",
-  auth(), // authentication first
+  auth("SUPERADMIN", "ADMIN"), // authentication first
   fileUploader.upload.fields([
     { name: "pdf", maxCount: 1 }, // max 5 pdfs
     { name: "img", maxCount: 1 }  // max 5 images
@@ -30,6 +30,6 @@ router.get("/file-id/:fileId", fileController.getSingleFile);
 router.get("/file-name/:title", fileController.getFileByName);
 
 // Delete file
-router.delete("/:fileId",auth(), fileController.deleteFile);
+router.delete("/:fileId",auth("SUPERADMIN","ADMIN"), fileController.deleteFile);
 
 export const fileRouter: Router = router;

@@ -4,6 +4,8 @@ import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
 import bcrypt from "bcryptjs";
 
+// Extend Express Request interface to include user with userType
+
 // Create a new user
 const createUser = async (req: Request) => {
   const { name, mobile, password, userType } = req.body;
@@ -24,6 +26,13 @@ const createUser = async (req: Request) => {
     );
   }
 
+  if (req.user?.userType === "ADMIN" && userType !== "USER") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Admin can only create users with USER role"
+    );
+  }
+
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -32,6 +41,7 @@ const createUser = async (req: Request) => {
       name,
       mobile,
       password: hashedPassword,
+      userType: userType || "USER",
     },
   });
 
@@ -57,26 +67,72 @@ const getAllUsers = async () => {
   });
 };
 
-// Update a user
 const updateUser = async (req: Request) => {
   const { id } = req.params;
   const { name, password, userType } = req.body;
 
+  // Fetch the target user
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  const updatedUser = await prisma.user.update({
-    where: { id },
-    data: {
-      name: name ?? user.name,
-      password: password ? await bcrypt.hash(password, 10) : user.password,
-      userType: userType ?? user.userType,
-    },
-  });
+  // Ensure req.user exists
+  if (!req.user) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized");
+  }
 
-  return updatedUser;
+  const currentUser = req.user;
+
+  // Cannot update own profile (handled later in a separate route)
+  if (currentUser.id === id) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You cannot update your own profile"
+    );
+  }
+
+  // Admin updating USER → allowed, but cannot change role
+  if (currentUser.userType === "ADMIN" && user.userType === "USER") {
+    return prisma.user.update({
+      where: { id },
+      data: {
+        name: name ?? user.name,
+        password: password ? await bcrypt.hash(password, 10) : user.password,
+      },
+    });
+  }
+
+  // Admin trying to update other Admin or Superadmin → forbidden
+  if (
+    currentUser.userType === "ADMIN" &&
+    (user.userType === "ADMIN" || user.userType === "SUPERADMIN")
+  ) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Admin cannot update other admin or superadmin profiles"
+    );
+  }
+
+  // Superadmin can update anyone
+  if (currentUser.userType === "SUPERADMIN") {
+    return prisma.user.update({
+      where: { id },
+      data: {
+        name: name ?? user.name,
+        password: password ? await bcrypt.hash(password, 10) : user.password,
+        userType: userType ?? user.userType, // can change role
+      },
+    });
+  }
+
+  // Everyone else → forbidden
+  throw new AppError(
+    httpStatus.FORBIDDEN,
+    "You are not authorized to update this profile"
+  );
+
+
 };
 
 // Delete a user

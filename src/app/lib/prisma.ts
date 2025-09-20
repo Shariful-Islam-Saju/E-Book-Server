@@ -32,7 +32,7 @@ async function seedAdmin(): Promise<void> {
         name: "Shariful Islam",
         mobile: "01617134236",
         password: adminPassword,
-        userType: "ADMIN",
+        userType: "SUPERADMIN",
       },
     });
 
@@ -43,9 +43,6 @@ async function seedAdmin(): Promise<void> {
   }
 }
 
-// Run seeding only in dev or explicitly
-if (config.env !== "production") {
   seedAdmin();
-}
 
 export default prisma;
