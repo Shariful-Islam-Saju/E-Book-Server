@@ -39,14 +39,14 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logger middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  logger.info({ method: req.method, url: req.url }, "Incoming request");
-  next();
-});
+// // Request logger middleware
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   logger.info({ method: req.method, url: req.url }, "Incoming request");
+//   next();
+// });
 
 // Health check route
-app.get("/api/v1", (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
   logger.info("Health check route called");
   res.send({
     message: "EBook App is running...",
