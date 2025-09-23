@@ -5,7 +5,8 @@ import httpStatus from "http-status";
 
 const createLead = async (req: Request) => {
   let { name, mobile, address, ebookId } = req.body;
-  const ipAddress = (req.headers["x-forwarded-for"] as string) || "";
+
+  const ipAddress = (req.headers["x-forwarded-for"] as string) || req.ip || "";
   const userAgent = req.headers["user-agent"] || "";
 
   // Normalize mobile number
@@ -59,7 +60,6 @@ const createLead = async (req: Request) => {
   return newLead;
 };
 
-
 const getLeadById = async (req: Request) => {
   const { id } = req.params;
   const lead = await prisma.lead.findUnique({
@@ -73,7 +73,7 @@ const getLeadById = async (req: Request) => {
 
 const getAllLeads = async () => {
   const leads = await prisma.lead.findMany();
-  console.log(leads)
+  console.log(leads);
   return leads;
 };
 
@@ -97,7 +97,7 @@ const updateLead = async (req: Request) => {
     },
   });
   return updatedLead;
-}
+};
 const deleteLead = async (req: Request) => {
   const { id } = req.params;
 
@@ -109,10 +109,10 @@ const deleteLead = async (req: Request) => {
   }
 
   const deletedLead = await prisma.lead.delete({
-    where: { id},
+    where: { id },
   });
   return deletedLead;
-}
+};
 
 export const leadService = {
   createLead,
