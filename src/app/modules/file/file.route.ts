@@ -11,11 +11,10 @@ router.post(
   "/upload",
   auth("SUPERADMIN", "ADMIN"), // authentication first
   fileUploader.upload.fields([
-    { name: "pdf", maxCount: 1 }, // max 5 pdfs
-    { name: "img", maxCount: 1 }, // max 5 images
+    { name: "pdf", maxCount: 1 }, // max 1 pdfs
+    { name: "img", maxCount: 1 }, // max 1 images
   ]),
   (req, res, next) => {
-    console.log("bodyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy sohel", req.body);
     req.body = JSON.parse(req.body.data);
     return fileController.uploadFile(req, res, next);
   }

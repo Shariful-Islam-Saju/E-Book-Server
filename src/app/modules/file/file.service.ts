@@ -8,8 +8,7 @@ const uploadFile = async (req: Request) => {
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
-  console.log(req.body);
-  const { title, description } = req.body;
+  const { title, description, bookPrice, discount } = req.body;
 
   if (!files || (!files.pdf?.length && !files.img?.length)) {
     throw new AppError(httpStatus.BAD_REQUEST, "No file uploaded");
@@ -39,6 +38,8 @@ const uploadFile = async (req: Request) => {
     url,
     imgUrl,
     title,
+    discount,
+    bookPrice,
     description,
     slug,
   };
@@ -93,8 +94,10 @@ const getSingleFile = async (id?: string) => {
       title: true,
       url: true,
       imgUrl: true,
-      slug:true,
+      slug: true,
       description: true,
+      bookPrice: true,
+      discount: true,
       reviews: {
         select: {
           id: true,

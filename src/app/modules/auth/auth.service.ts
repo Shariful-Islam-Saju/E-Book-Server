@@ -8,57 +8,55 @@ import config from "@app/config";
 import httpStatus from "http-status";
 import { AuthTokens } from "@app/types";
 
+// // ---------------- REGISTER ----------------
+// const register = async (req: Request): Promise<AuthTokens> => {
+//   const { name, mobile, password, userType } = req.body as {
+//     name: string;
+//     mobile: string;
+//     password: string;
+//     userType?: "ADMIN" | "USER";
+//   };
 
+//   if (!name || !mobile || !password) {
+//     throw new AppError(
+//       httpStatus.BAD_REQUEST,
+//       "Name, mobile, and password are required"
+//     );
+//   }
 
-// ---------------- REGISTER ----------------
-const register = async (req: Request): Promise<AuthTokens> => {
-  const { name, mobile, password, userType } = req.body as {
-    name: string;
-    mobile: string;
-    password: string;
-    userType?: "ADMIN" | "USER";
-  };
+//   const existingUser = await prisma.user.findUnique({ where: { mobile } });
+//   if (existingUser) {
+//     throw new AppError(httpStatus.CONFLICT, "Mobile number already registered");
+//   }
 
-  if (!name || !mobile || !password) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Name, mobile, and password are required"
-    );
-  }
+//   const hashedPassword = await bcrypt.hash(
+//     password,
+//     Number(config.salt_rounds)
+//   );
 
-  const existingUser = await prisma.user.findUnique({ where: { mobile } });
-  if (existingUser) {
-    throw new AppError(httpStatus.CONFLICT, "Mobile number already registered");
-  }
+//   const user = await prisma.user.create({
+//     data: {
+//       name,
+//       mobile,
+//       password: hashedPassword,
+//       userType: userType || "USER",
+//     },
+//   });
 
-  const hashedPassword = await bcrypt.hash(
-    password,
-    Number(config.salt_rounds)
-  );
+//   const accessToken = jwtHelpers.generateToken(
+//     { id: user.id, userType: user.userType },
+//     config.jwt.access_token_secret,
+//     Number(config.jwt.access_token_expires_in)
+//   );
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      mobile,
-      password: hashedPassword,
-      userType: userType || "USER",
-    },
-  });
+//   const refreshToken = jwtHelpers.generateToken(
+//     { id: user.id, userType: user.userType },
+//     config.jwt.refresh_token_secret,
+//     Number(config.jwt.refresh_token_expires_in)
+//   );
 
-  const accessToken = jwtHelpers.generateToken(
-    { id: user.id, userType: user.userType },
-    config.jwt.access_token_secret,
-    Number(config.jwt.access_token_expires_in)
-  );
-
-  const refreshToken = jwtHelpers.generateToken(
-    { id: user.id, userType: user.userType },
-    config.jwt.refresh_token_secret,
-    Number(config.jwt.refresh_token_expires_in)
-  );
-
-  return { accessToken, refreshToken };
-};
+//   return { accessToken, refreshToken };
+// };
 
 // ---------------- LOGIN ----------------
 const login = async (req: Request): Promise<AuthTokens> => {
@@ -82,13 +80,23 @@ const login = async (req: Request): Promise<AuthTokens> => {
   }
 
   const accessToken = jwtHelpers.generateToken(
-    { id: user.id, userType: user.userType },
+    {
+      id: user.id,
+      name: user.name,
+      mobile: user.mobile,
+      userType: user.userType,
+    },
     config.jwt.access_token_secret,
     Number(config.jwt.access_token_expires_in)
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    { id: user.id, userType: user.userType },
+    {
+      id: user.id,
+      name: user.name,
+      mobile: user.mobile,
+      userType: user.userType,
+    },
     config.jwt.refresh_token_secret,
     Number(config.jwt.refresh_token_expires_in)
   );
@@ -97,7 +105,9 @@ const login = async (req: Request): Promise<AuthTokens> => {
 };
 
 // ---------------- REFRESH TOKEN ----------------
-const refreshToken = async (req: Request): Promise<Pick<AuthTokens, "accessToken">> => {
+const refreshToken = async (
+  req: Request
+): Promise<Pick<AuthTokens, "accessToken">> => {
   const token = req.cookies.refreshToken as string;
   if (!token) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Refresh token missing");
@@ -105,7 +115,10 @@ const refreshToken = async (req: Request): Promise<Pick<AuthTokens, "accessToken
 
   let decodedData: any;
   try {
-    decodedData = jwtHelpers.verifyToken(token, config.jwt.refresh_token_secret);
+    decodedData = jwtHelpers.verifyToken(
+      token,
+      config.jwt.refresh_token_secret
+    );
   } catch {
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid refresh token");
   }
@@ -125,10 +138,7 @@ const refreshToken = async (req: Request): Promise<Pick<AuthTokens, "accessToken
   return { accessToken };
 };
 
-
-
 export const authService = {
-  register,
   login,
   refreshToken,
 };

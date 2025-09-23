@@ -42,6 +42,8 @@ model EBook {
   updatedAt   DateTime @updatedAt
   imgUrl      String?
   fileName    String?
+  bookPrice   Int      @default(0)
+  discount    Int      @default(0)
   // Relations
   reviews Review[]
 
