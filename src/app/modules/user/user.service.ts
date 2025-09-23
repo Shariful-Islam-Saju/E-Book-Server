@@ -35,12 +35,14 @@ const createUser = async (req: Request) => {
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
-
+const ipAddress = (req.headers["x-forwarded-for"] as string) || "";
+const userAgent = req.headers["user-agent"] || "";
   const user = await prisma.user.create({
     data: {
       name,
       mobile,
       password: hashedPassword,
+      ip: req.ip,
       userType: userType || "USER",
     },
   });

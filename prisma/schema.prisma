@@ -13,6 +13,8 @@ model User {
   mobile    String   @unique
   userType  UserType @default(USER)
   password  String
+  ip        String?
+  userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -21,6 +23,8 @@ model Lead {
   id        String   @id @default(uuid())
   name      String?
   mobile    String   @unique
+  ip        String?
+  userAgent String?
   address   String?
   ebookId   String?
   createdAt DateTime @default(now())
@@ -32,6 +36,7 @@ model EBook {
   title       String
   url         String
   htmlCode    String?
+  slug        String   @unique
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -39,6 +44,8 @@ model EBook {
   fileName    String?
   // Relations
   reviews Review[]
+
+  @@index([slug])
 }
 
 model Review {
@@ -50,7 +57,8 @@ model Review {
   mobile      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
+  profileImg  String?
+  FacebookImg String?
   // Relation with cascade
   ebookId     String
   ebook       EBook @relation(fields: [ebookId], references: [id], onDelete: Cascade)

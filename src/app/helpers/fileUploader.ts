@@ -36,6 +36,37 @@ const uploadToS3 = async (file: Express.Multer.File) => {
   return `https://${config.aws.aws_bucket}.s3.${config.aws.aws_region}.amazonaws.com/${uploadParams.Key}`;
 };
 
+ const uploadFileToS3 = async (file: Express.Multer.File) => {
+  const safeFileName = file.originalname.replace(/\s+/g, "_");
+  const fileKey = `${Date.now()}_${safeFileName}`;
+
+  const uploadParams = {
+    Bucket: config.aws.aws_bucket,
+    Key: fileKey,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+    // Add Content-Disposition for PDFs to trigger downloads
+    ContentDisposition:
+      file.mimetype === "application/pdf"
+        ? `attachment; filename="${safeFileName}"`
+        : undefined,
+    // Add caching for better performance
+    CacheControl: "public, max-age=31536000", // Cache for 1 year
+    // Optional: Add metadata for tracking
+    Metadata: {
+      originalName: file.originalname,
+      uploadedAt: new Date().toISOString(),
+    },
+  };
+
+  const command = new PutObjectCommand(uploadParams);
+  await s3.send(command);
+
+  // Use CloudFront URL if configured, otherwise S3 URL
+  const baseUrl = `https://${config.aws.aws_bucket}.s3.${config.aws.aws_region}.amazonaws.com/${fileKey}`;
+  return baseUrl;
+};
+
 // ---------------- Get Signed URL ----------------
 const getSignedUrl = async (fileUrl: string, expiresIn = 3600) => {
   // Extract Key from full URL
@@ -67,4 +98,5 @@ export const fileUploader = {
   uploadToS3,
   getSignedUrl,
   deleteFromS3,
+  uploadFileToS3
 };

@@ -33,6 +33,7 @@ async function seedAdmin(): Promise<void> {
         mobile: "01617134236",
         password: adminPassword,
         userType: "SUPERADMIN",
+        ip:  "0.0.0.0",
       },
     });
 

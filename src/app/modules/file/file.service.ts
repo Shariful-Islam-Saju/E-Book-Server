@@ -3,13 +3,13 @@ import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
 import { fileUploader } from "@app/helpers/fileUploader";
-import { get } from "http";
 
 const uploadFile = async (req: Request) => {
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
-  const { title, description }  = req.body;
+  console.log(req.body);
+  const { title, description } = req.body;
 
   if (!files || (!files.pdf?.length && !files.img?.length)) {
     throw new AppError(httpStatus.BAD_REQUEST, "No file uploaded");
@@ -21,24 +21,31 @@ const uploadFile = async (req: Request) => {
   if (!pdfFile) {
     throw new AppError(httpStatus.BAD_REQUEST, "PDF file is required");
   }
+  const safeFileName = pdfFile.originalname.replace(/\s+/g, "_");
+  const uniquePart = Date.now().toString().slice(-6);
+
+  // Combine unique part with safe filename
+  const slug = `${uniquePart}_${safeFileName}`;
 
   if (!imgFile) {
     throw new AppError(httpStatus.BAD_REQUEST, "Image file is required");
   }
 
   // Upload to AWS S3
-  const url = await fileUploader.uploadToS3(pdfFile);
+  const url = await fileUploader.uploadFileToS3(pdfFile);
   const imgUrl = await fileUploader.uploadToS3(imgFile);
+
+  const data = {
+    url,
+    imgUrl,
+    title,
+    description,
+    slug,
+  };
 
   // Save metadata in DB
   const ebook = await prisma.eBook.create({
-    data: {
-      title,
-      description,
-      fileName: pdfFile.originalname,
-      url,
-      imgUrl,
-    },
+    data,
   });
 
   return ebook;
@@ -80,12 +87,13 @@ const getSingleFile = async (id?: string) => {
   }
 
   const ebook = await prisma.eBook.findUnique({
-    where: { id },
+    where: { slug: id },
     select: {
       id: true,
       title: true,
       url: true,
       imgUrl: true,
+      slug:true,
       description: true,
       reviews: {
         select: {
