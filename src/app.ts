@@ -38,6 +38,7 @@ app.use(cors(corsOptions));
 // Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.set("trust proxy", true);
 
 // // Request logger middleware
 // app.use((req: Request, res: Response, next: NextFunction) => {

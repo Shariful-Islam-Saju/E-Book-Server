@@ -6,7 +6,10 @@ import httpStatus from "http-status";
 const createLead = async (req: Request) => {
   let { name, mobile, address, ebookId } = req.body;
 
-  const ipAddress = (req.headers["x-forwarded-for"] as string) || req.ip || "";
+  const ipAddress =
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ||
+    req.ip ||
+    "";
   const userAgent = req.headers["user-agent"] || "";
 
   // Normalize mobile number
