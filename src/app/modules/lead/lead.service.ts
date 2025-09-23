@@ -5,6 +5,8 @@ import httpStatus from "http-status";
 
 const createLead = async (req: Request) => {
   let { name, mobile, address, ebookId } = req.body;
+  const ipAddress = (req.headers["x-forwarded-for"] as string) || "";
+  const userAgent = req.headers["user-agent"] || "";
 
   // Normalize mobile number
   const normalizeMobile = (number?: string) => {
@@ -40,12 +42,16 @@ const createLead = async (req: Request) => {
     update: {
       name: hasTwoLetters(name) ? name.trim() : undefined,
       address: hasTwoLetters(address) ? address.trim() : undefined,
+      ip: ipAddress,
+      userAgent,
       ebookId,
     },
     create: {
       name: hasTwoLetters(name) ? name.trim() : undefined,
       address: hasTwoLetters(address) ? address.trim() : undefined,
       mobile: normalizedMobile,
+      ip: ipAddress,
+      userAgent,
       ebookId,
     },
   });
