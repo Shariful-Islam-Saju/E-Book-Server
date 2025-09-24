@@ -75,9 +75,57 @@ const getLeadById = async (req: Request) => {
 };
 
 const getAllLeads = async () => {
-  const leads = await prisma.lead.findMany();
-  console.log(leads);
-  return leads;
+  const leads = await prisma.$queryRaw<
+    {
+      id: string;
+      name: string | null;
+      mobile: string;
+      ip: string | null;
+      userAgent: string | null;
+      address: string | null;
+      ebookId: string | null;
+      createdAt: Date;
+      updatedAt: Date;
+      ebook_title: string | null;
+      ebook_url: string | null;
+      ebook_slug: string | null;
+      ebook_imgUrl: string | null;
+    }[]
+  >`
+    SELECT
+      l.id,
+      l.name,
+      l.mobile,
+      l.ip,
+      l."userAgent",
+      l.address,
+      l."ebookId",
+      l."createdAt",
+      l."updatedAt",
+      e.title AS ebook_title,
+      e.url AS ebook_url,
+      e.slug AS ebook_slug,
+      e."imgUrl" AS ebook_imgUrl
+    FROM "Lead" l
+    LEFT JOIN "EBook" e
+    ON l."ebookId" = e.id
+  `;
+
+  // Map and only keep ebook object
+  return leads.map((lead) => {
+    const { ebook_title, ebook_url, ebook_slug, ebook_imgUrl, ...rest } = lead;
+    return {
+      ...rest,
+      ebook: ebook_title
+        ? {
+            title: ebook_title,
+            url: ebook_url,
+            slug: ebook_slug,
+            imgUrl: ebook_imgUrl,
+          }
+        : null,
+    };
+  });
 };
 
 const updateLead = async (req: Request) => {
@@ -103,7 +151,6 @@ const updateLead = async (req: Request) => {
 };
 const deleteLead = async (req: Request) => {
   const { id } = req.params;
-
   const existingLead = await prisma.lead.findUnique({
     where: { id },
   });

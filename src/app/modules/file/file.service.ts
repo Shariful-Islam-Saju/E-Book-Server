@@ -66,7 +66,6 @@ const downloadFile = async (id: string) => {
 
   // If you want direct download, generate signed URL
   const signedUrl = await fileUploader.getSignedUrl(ebook.url);
-  console.log(signedUrl);
   return {
     ...ebook,
     downloadUrl: signedUrl,
