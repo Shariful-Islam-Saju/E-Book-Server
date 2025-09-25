@@ -29,7 +29,7 @@ const getLeadById = catchAsync(async (req: Request, res: Response) => {
 // ✅ Get all leads
 const getAllLeads = catchAsync(async (req: Request, res: Response) => {
   console.log("Fetching all leads");
-  const result = await leadService.getAllLeads();
+  const result = await leadService.getAllLeads(req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

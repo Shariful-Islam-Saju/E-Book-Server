@@ -2,6 +2,7 @@ import { Request } from "express";
 import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
 import httpStatus from "http-status";
+import { Prisma } from "@prisma/client";
 
 const createLead = async (req: Request) => {
   let { name, mobile, address, ebookId } = req.body;
@@ -74,7 +75,62 @@ const getLeadById = async (req: Request) => {
   return lead;
 };
 
-const getAllLeads = async () => {
+export const getAllLeads = async (req: Request) => {
+  const {
+    search = "",
+    fromDate = "",
+    toDate = "",
+    ebookIds = [],
+    page = "1",
+    limit = "100",
+  } = req.query as {
+    search?: string;
+    fromDate?: string;
+    toDate?: string;
+    ebookIds?: string | string[];
+    page?: string;
+    limit?: string;
+  };
+
+  const ebookIdsArr = Array.isArray(ebookIds)
+    ? ebookIds
+    : ebookIds
+    ? [ebookIds]
+    : [];
+
+  const conditions: Prisma.Sql[] = [];
+
+  // If search exists, only apply search filter
+  if (search.trim() !== "") {
+    const likeSearch = `%${search}%`;
+    conditions.push(
+      Prisma.sql`(l.name ILIKE ${likeSearch} OR l.mobile ILIKE ${likeSearch} OR l.address ILIKE ${likeSearch})`
+    );
+  } else {
+    // Otherwise, apply date and ebook filters
+    if (fromDate)
+      conditions.push(Prisma.sql`l."createdAt" >= ${new Date(fromDate)}`);
+    if (toDate)
+      conditions.push(Prisma.sql`l."createdAt" <= ${new Date(toDate)}`);
+    if (ebookIdsArr.length > 0) {
+      const ebookConditions: Prisma.Sql[] = ebookIdsArr.map(
+        (id) => Prisma.sql`l."ebookId" ILIKE ${`%${id}%`}`
+      );
+      conditions.push(Prisma.sql`(${Prisma.join(ebookConditions, " OR ")})`);
+    }
+  }
+
+  const whereClause =
+    conditions.length > 0
+      ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}`
+      : Prisma.sql``;
+
+  // Pagination only applies if search is empty
+  const limitNum = search.trim() === "" ? Number(limit) : undefined;
+  const offset =
+    search.trim() === "" ? (Number(page) - 1) * Number(limit) : undefined;
+
+  // Fetch leads
   const leads = await prisma.$queryRaw<
     {
       id: string;
@@ -86,46 +142,82 @@ const getAllLeads = async () => {
       ebookId: string | null;
       createdAt: Date;
       updatedAt: Date;
-      ebook_title: string | null;
-      ebook_url: string | null;
-      ebook_slug: string | null;
-      ebook_imgUrl: string | null;
     }[]
-  >`
-    SELECT
-      l.id,
-      l.name,
-      l.mobile,
-      l.ip,
-      l."userAgent",
-      l.address,
-      l."ebookId",
-      l."createdAt",
-      l."updatedAt",
-      e.title AS ebook_title,
-      e.url AS ebook_url,
-      e.slug AS ebook_slug,
-      e."imgUrl" AS ebook_imgUrl
+  >(Prisma.sql`
+    SELECT *
     FROM "Lead" l
-    LEFT JOIN "EBook" e
-    ON l."ebookId" = e.id
-  `;
+    ${whereClause}
+    ORDER BY l."createdAt" DESC
+    ${
+      limitNum !== undefined
+        ? Prisma.sql`LIMIT ${limitNum} OFFSET ${offset}`
+        : Prisma.sql``
+    }
+  `);
 
-  // Map and only keep ebook object
-  return leads.map((lead) => {
-    const { ebook_title, ebook_url, ebook_slug, ebook_imgUrl, ...rest } = lead;
-    return {
-      ...rest,
-      ebook: ebook_title
-        ? {
-            title: ebook_title,
-            url: ebook_url,
-            slug: ebook_slug,
-            imgUrl: ebook_imgUrl,
-          }
-        : null,
-    };
+  // Count total leads
+  const total =
+    search.trim() === ""
+      ? Number(
+          (
+            await prisma.$queryRaw<{ count: string }[]>`
+        SELECT COUNT(*) as count
+        FROM "Lead" l
+        ${whereClause}
+      `
+          )[0]?.count ?? 0
+        )
+      : leads.length; // total = all matched leads when searching
+
+  // Collect all ebook IDs
+  const allEbookIds = leads
+    .flatMap((l) => {
+      if (!l.ebookId) return [];
+      try {
+        const ids = JSON.parse(l.ebookId);
+        if (Array.isArray(ids)) return ids;
+      } catch {
+        return l.ebookId.split(",").map((id) => id.trim());
+      }
+      return [];
+    })
+    .filter(Boolean);
+
+  const ebooks =
+    allEbookIds.length > 0
+      ? await prisma.eBook.findMany({
+          where: { id: { in: allEbookIds } },
+          select: {
+            id: true,
+            title: true,
+            url: true,
+            slug: true,
+            imgUrl: true,
+          },
+        })
+      : [];
+
+  // Map ebooks to leads
+  const formatted = leads.map((lead) => {
+    let leadEbookIds: string[] = [];
+    if (lead.ebookId) {
+      try {
+        const ids = JSON.parse(lead.ebookId);
+        if (Array.isArray(ids)) leadEbookIds = ids;
+      } catch {
+        leadEbookIds = lead.ebookId.split(",").map((id) => id.trim());
+      }
+    }
+
+    const leadEbooks = leadEbookIds
+      .map((id) => ebooks.find((e) => e.id === id))
+      .filter(Boolean);
+
+    const { ebookId, ...rest } = lead;
+    return { ...rest, ebook: leadEbooks };
   });
+
+  return { data: formatted, total };
 };
 
 const updateLead = async (req: Request) => {
