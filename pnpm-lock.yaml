@@ -32,6 +32,9 @@ importers:
       dotenv:
         specifier: ^17.2.2
         version: 17.2.2
+      e-book-sever:
+        specifier: 'link:'
+        version: 'link:'
       express:
         specifier: ^5.1.0
         version: 5.1.0

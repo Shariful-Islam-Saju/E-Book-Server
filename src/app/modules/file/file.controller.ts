@@ -49,7 +49,6 @@ const getSingleFile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
 // ✅ Get  file info by name
 const getFileByName = catchAsync(async (req: Request, res: Response) => {
   const result = await fileService.getFileByName(req.params.fileName);
@@ -72,6 +71,17 @@ const deleteFile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ✅ Update file info
+const updateFile = catchAsync(async (req: Request, res: Response) => {
+  const result = await fileService.updateFile(req);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "File updated successfully!",
+    data: result,
+  });
+});
+
 export const fileController = {
   uploadFile,
   downloadFile,
@@ -79,4 +89,5 @@ export const fileController = {
   getSingleFile,
   deleteFile,
   getFileByName,
+  updateFile, // added here
 };

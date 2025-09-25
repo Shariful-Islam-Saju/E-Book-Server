@@ -173,6 +173,54 @@ const deleteFile = async (id: string) => {
   return { message: "File deleted successfully" };
 };
 
+// ---------------- UPDATE FILE WITH FILES ----------------
+const updateFile = async (req: any) => {
+  const id = req.params.fileId;
+  const image = req?.files?.img;
+  const pdf  = req?.files?.pdf
+  const updateData = req.body;
+  if (!id) {
+    throw new AppError(httpStatus.BAD_REQUEST, "File ID is required");
+  }
+
+
+  const ebook = await prisma.eBook.findUnique({ where: { id } });
+
+  if (!ebook) {
+    throw new AppError(httpStatus.NOT_FOUND, "File not found");
+  }
+
+  let pdfUrl = ebook.url;
+  let imgUrl = ebook.imgUrl;
+
+  // Update PDF if a new one is uploaded
+  if (pdf) {
+    if (ebook.url) {
+      await fileUploader.deleteFromS3(ebook.url); // delete old PDF
+    }
+    pdfUrl = await fileUploader.uploadFileToS3(pdf[0]); // upload new PDF
+  }
+
+  // Update Image if a new one is uploaded
+  if (image) {
+    if (ebook.imgUrl) {
+      await fileUploader.deleteFromS3(ebook.imgUrl); // delete old image
+    }
+    imgUrl = await fileUploader.uploadToS3(image[0]); // upload new image
+  }
+
+  const updatedEbook = await prisma.eBook.update({
+    where: { id },
+    data: {
+      ...updateData,
+      url: pdfUrl,
+      imgUrl: imgUrl,
+    },
+  });
+
+  return updatedEbook;
+};
+
 export const fileService = {
   uploadFile,
   downloadFile,
@@ -180,4 +228,5 @@ export const fileService = {
   getSingleFile,
   deleteFile,
   getFileByName,
+  updateFile, // PATCH route support with files
 };

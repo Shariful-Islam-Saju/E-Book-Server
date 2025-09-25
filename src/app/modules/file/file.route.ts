@@ -6,7 +6,6 @@ import auth from "@app/middlewares/auth";
 const router = Router();
 
 // Upload file
-// Upload file
 router.post(
   "/upload",
   auth("SUPERADMIN", "ADMIN"), // authentication first
@@ -25,6 +24,19 @@ router.get("/download/:fileId", auth(), fileController.downloadFile);
 
 // Get all files
 router.get("/", fileController.getAllFiles);
+// Update file info
+router.patch(
+  "/:fileId",
+  auth("SUPERADMIN", "ADMIN"),
+  fileUploader.upload.fields([
+    { name: "pdf", maxCount: 1 }, // max 1 pdfs
+    { name: "img", maxCount: 1 }, // max 1 images
+  ]),
+  (req, res, next) => {
+    req.body = JSON.parse(req.body.data);
+    return fileController.updateFile(req, res, next);
+  }
+);
 
 // Get single file info
 router.get("/file-id/:fileId", fileController.getSingleFile);
