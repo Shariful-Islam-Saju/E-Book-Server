@@ -14,6 +14,9 @@ app.use(cookieParser());
 
 // CORS setup
 const allowedOrigins: string[] = [
+  "https://dsboi.com",
+  "http://dsboi.com",
+  "https://connect.facebook.net/en_US/fbevents.js",
   "http://localhost:3000",
   "http://localhost:3001",
 ];
