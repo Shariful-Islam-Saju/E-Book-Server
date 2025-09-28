@@ -29,10 +29,23 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ✅ Update an existing review
+const updateReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await reviewService.updateReview(req);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Review updated successfully!",
+    data: result,
+  });
+});
 
 const getSingleProductReviews = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await reviewService.getSingleProductReviews(req.params.ebookId);
+    const result = await reviewService.getSingleProductReviews(
+      req.params.ebookId
+    );
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -56,6 +69,7 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
 
 export const reviewController = {
   createReview,
+  updateReview,
   getAllReviews,
   deleteReview,
   getSingleProductReviews,

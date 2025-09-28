@@ -105,6 +105,7 @@ const getSingleFile = async (id?: string) => {
           title: true,
           reviewBy: true,
           mobile: true,
+          profileImg: true,
         },
       },
     },
@@ -151,13 +152,14 @@ const getFileByName = async (title?: string) => {
 const deleteFile = async (id: string) => {
   const ebook = await prisma.eBook.findUnique({
     where: { id },
+    include: { reviews: true }, // also fetch related reviews
   });
 
   if (!ebook) {
     throw new AppError(httpStatus.NOT_FOUND, "File not found");
   }
 
-  // Delete PDF and Image from AWS S3
+  // Delete eBook's own PDF and image
   if (ebook.url) {
     await fileUploader.deleteFromS3(ebook.url);
   }
@@ -165,24 +167,33 @@ const deleteFile = async (id: string) => {
     await fileUploader.deleteFromS3(ebook.imgUrl);
   }
 
-  // Delete from DB
+  // Delete review images (before cascade removes reviews from DB)
+  for (const review of ebook.reviews) {
+    if (review.profileImg) {
+      await fileUploader.deleteFromS3(review.profileImg);
+    }
+    if (review.FacebookImg) {
+      await fileUploader.deleteFromS3(review.FacebookImg);
+    }
+  }
+
+  // Delete eBook (cascade will also delete reviews in DB)
   await prisma.eBook.delete({
     where: { id: ebook.id },
   });
 
-  return { message: "File deleted successfully" };
+  return { message: "File and related reviews deleted successfully" };
 };
 
 // ---------------- UPDATE FILE WITH FILES ----------------
 const updateFile = async (req: any) => {
   const id = req.params.fileId;
   const image = req?.files?.img;
-  const pdf  = req?.files?.pdf
+  const pdf = req?.files?.pdf;
   const updateData = req.body;
   if (!id) {
     throw new AppError(httpStatus.BAD_REQUEST, "File ID is required");
   }
-
 
   const ebook = await prisma.eBook.findUnique({ where: { id } });
 
