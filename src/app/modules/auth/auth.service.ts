@@ -106,13 +106,11 @@ const login = async (req: Request): Promise<AuthTokens> => {
 
 // ---------------- REFRESH TOKEN ----------------
 const refreshToken = async (
-  req: Request
+  token:string
 ): Promise<Pick<AuthTokens, "accessToken">> => {
-  const token = req.cookies.refreshToken as string;
   if (!token) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Refresh token missing");
   }
-
   let decodedData: any;
   try {
     decodedData = jwtHelpers.verifyToken(

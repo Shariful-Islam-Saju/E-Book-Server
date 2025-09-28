@@ -1,4 +1,3 @@
-import { get } from 'http';
 import { Request } from "express";
 import AppError from "@app/errors/AppError";
 import prisma from "@app/lib/prisma";
